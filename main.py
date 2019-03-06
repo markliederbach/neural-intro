@@ -1,34 +1,7 @@
 """https://victorzhou.com/blog/intro-to-neural-networks/"""
 import numpy
+from network.neurons import Neuron
 
-
-class Neuron:
-    def __init__(self, weights, bias):
-        self.weights = weights
-        self.bias = bias
-
-    @staticmethod
-    def sigmoid(value):
-        return 1 / (1 + numpy.exp(-value))
-
-    @classmethod
-    def activation(cls, value):
-        return cls.sigmoid(value)
-
-    @classmethod
-    def deriv_activation(cls, value):
-        fx = cls.activation(value)
-        return fx * (1 - fx)
-
-    def sum_feed(self, inputs):
-        return numpy.dot(self.weights, inputs) + self.bias
-
-    def feedforward(self, inputs):
-        total = self.sum_feed(inputs)
-        return self.activation(total)
-
-    def __str__(self):
-        return "weight1: {}, weight2: {}, bias: {}".format(self.weights[0], self.weights[1], self.bias)
 
 
 # weights = numpy.array([0, 1])
@@ -71,11 +44,11 @@ class NeuralNetwork:
     def __init__(self):
 
         # Define hidden layer
-        self.h1 = Neuron(numpy.array([numpy.random.normal(), numpy.random.normal()]), numpy.random.normal())
-        self.h2 = Neuron(numpy.array([numpy.random.normal(), numpy.random.normal()]), numpy.random.normal())
+        self.h1 = Neuron(num_weights=2)
+        self.h2 = Neuron(num_weights=2)
 
         # Define output layer
-        self.o1 = Neuron(numpy.array([numpy.random.normal(), numpy.random.normal()]), numpy.random.normal())
+        self.o1 = Neuron(num_weights=2)
 
     def gender(self, inputs):
         result = self.feedforward(inputs)
@@ -138,27 +111,21 @@ class NeuralNetwork:
                 dprediction_dh2 = self.o1.weights[1] * self.o1.deriv_activation(o1_sum)
 
                 # Update weights and biases
-                self.h1.weights = numpy.array(
-                    [
-                        self.h1.weights[0] - (learn_rate * dL_dprediction * dprediction_dh1 * dprediction_dw1),
-                        self.h1.weights[1] - (learn_rate * dL_dprediction * dprediction_dh1 * dprediction_dw2),
-                    ]
+                self.h1.update_weights(
+                    self.h1.weights[0] - (learn_rate * dL_dprediction * dprediction_dh1 * dprediction_dw1),
+                    self.h1.weights[1] - (learn_rate * dL_dprediction * dprediction_dh1 * dprediction_dw2),
                 )
                 self.h1.bias = self.h1.bias - (learn_rate * dL_dprediction * dprediction_dh1 * dprediction_dbias1)
 
-                self.h2.weights = numpy.array(
-                    [
-                        self.h2.weights[0] - (learn_rate * dL_dprediction * dprediction_dh2 * dprediction_dw3),
-                        self.h2.weights[1] - (learn_rate * dL_dprediction * dprediction_dh2 * dprediction_dw4),
-                    ]
+                self.h2.update_weights(
+                    self.h2.weights[0] - (learn_rate * dL_dprediction * dprediction_dh2 * dprediction_dw3),
+                    self.h2.weights[1] - (learn_rate * dL_dprediction * dprediction_dh2 * dprediction_dw4),
                 )
                 self.h2.bias = self.h2.bias - (learn_rate * dL_dprediction * dprediction_dh2 * dprediction_dbias2)
 
-                self.o1.weights = numpy.array(
-                    [
-                        self.o1.weights[0] - (learn_rate * dL_dprediction * dprediction_dw5),
-                        self.o1.weights[1] - (learn_rate * dL_dprediction * dprediction_dw6),
-                    ]
+                self.o1.update_weights(
+                    self.o1.weights[0] - (learn_rate * dL_dprediction * dprediction_dw5),
+                    self.o1.weights[1] - (learn_rate * dL_dprediction * dprediction_dw6),
                 )
                 self.o1.bias = self.o1.bias - (learn_rate * dL_dprediction * dprediction_dbias3)
                 # Every 10 iterations, print status
@@ -181,10 +148,14 @@ all_answers = numpy.array([
   1,  # Diana
 ])
 
-network = NeuralNetwork()
-network.train(train_data, all_answers)
-
 emily = numpy.array([-7, -3])  # 128 pounds, 63 inches
 frank = numpy.array([20, 2])  # 155 pounds, 68 inches
-print("Emily: {}".format(network.gender(emily)))  # Female
-print("Frank: {}".format(network.gender(frank)))  # Male
+
+network = NeuralNetwork()
+print("1 Emily: {}".format(network.gender(emily)))  # Female
+print("1 Frank: {}".format(network.gender(frank)))  # Male
+
+network.train(train_data, all_answers)
+
+print("2 Emily: {}".format(network.gender(emily)))  # Female
+print("2 Frank: {}".format(network.gender(frank)))  # Male
